@@ -164,3 +164,29 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+#############
+## New Game Plus
+#############
+
+# User data
+data/
+*.db
+*.db-journal
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
