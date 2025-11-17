@@ -1,0 +1,28 @@
+[project]
+name = "new-game-plus"
+version = "1.0.0"
+description = "A minimalist offline life RPG system for the Linux terminal"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-or-later"}
+authors = [
+    {name = "New Game Plus Contributors"}
+]
+
+dependencies = [
+    "rich>=13.0.0",
+    "click>=8.0.0",
+    "sqlalchemy>=2.0.0",
+    "python-dateutil>=2.8.0",
+]
+
+[project.scripts]
+ngp = "ngp.main:cli"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ngp*"]
