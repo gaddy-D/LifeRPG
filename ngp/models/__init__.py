@@ -6,6 +6,8 @@ from .mission import Mission
 from .completion import Completion
 from .journal import JournalEntry
 from .capsule import TimeCapsule
+from .reward import Reward
+from .redemption import Redemption
 
 __all__ = [
     'Player',
@@ -14,4 +16,6 @@ __all__ = [
     'Completion',
     'JournalEntry',
     'TimeCapsule',
+    'Reward',
+    'Redemption',
 ]

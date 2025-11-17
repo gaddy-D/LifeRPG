@@ -127,6 +127,31 @@ class StorageService:
             )
         """)
 
+        # Rewards table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS rewards (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                price_coins INTEGER NOT NULL,
+                note TEXT,
+                is_archived BOOLEAN DEFAULT 0,
+                created_at TEXT NOT NULL,
+                times_redeemed INTEGER DEFAULT 0
+            )
+        """)
+
+        # Redemptions table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS redemptions (
+                id TEXT PRIMARY KEY,
+                reward_id TEXT NOT NULL,
+                coins_spent INTEGER NOT NULL,
+                redeemed_at TEXT NOT NULL,
+                note TEXT,
+                FOREIGN KEY (reward_id) REFERENCES rewards(id)
+            )
+        """)
+
         self.conn.commit()
 
     # Player methods
@@ -442,6 +467,96 @@ class StorageService:
             unlock_params=json.loads(row['unlock_params']),
             unlocked_at=datetime.fromisoformat(row['unlocked_at']) if row['unlocked_at'] else None,
             archived_to_journal_entry_id=row['archived_to_journal_entry_id']
+        )
+
+    # Reward methods
+    def get_rewards(self, include_archived: bool = False) -> List:
+        """Get all rewards"""
+        from ..models import Reward
+        cursor = self.conn.cursor()
+        query = "SELECT * FROM rewards"
+        if not include_archived:
+            query += " WHERE is_archived = 0"
+        query += " ORDER BY price_coins"
+
+        rows = cursor.execute(query).fetchall()
+        return [self._row_to_reward(row) for row in rows]
+
+    def get_reward(self, reward_id: str):
+        """Get specific reward"""
+        from ..models import Reward
+        cursor = self.conn.cursor()
+        row = cursor.execute("SELECT * FROM rewards WHERE id = ?", (reward_id,)).fetchone()
+        return self._row_to_reward(row) if row else None
+
+    def save_reward(self, reward):
+        """Save or update reward"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO rewards
+            (id, title, price_coins, note, is_archived, created_at, times_redeemed)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            reward.id,
+            reward.title,
+            reward.price_coins,
+            reward.note,
+            reward.is_archived,
+            reward.created_at.isoformat(),
+            reward.times_redeemed
+        ))
+        self.conn.commit()
+
+    def _row_to_reward(self, row):
+        """Convert DB row to Reward object"""
+        from ..models import Reward
+        return Reward(
+            id=row['id'],
+            title=row['title'],
+            price_coins=row['price_coins'],
+            note=row['note'],
+            is_archived=bool(row['is_archived']),
+            created_at=datetime.fromisoformat(row['created_at']),
+            times_redeemed=row['times_redeemed']
+        )
+
+    # Redemption methods
+    def save_redemption(self, redemption):
+        """Save a redemption"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO redemptions
+            (id, reward_id, coins_spent, redeemed_at, note)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            redemption.id,
+            redemption.reward_id,
+            redemption.coins_spent,
+            redemption.redeemed_at.isoformat(),
+            redemption.note
+        ))
+        self.conn.commit()
+
+    def get_redemptions(self, limit: int = 50) -> List:
+        """Get recent redemptions"""
+        from ..models import Redemption
+        cursor = self.conn.cursor()
+        rows = cursor.execute("""
+            SELECT * FROM redemptions
+            ORDER BY redeemed_at DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+        return [self._row_to_redemption(row) for row in rows]
+
+    def _row_to_redemption(self, row):
+        """Convert DB row to Redemption object"""
+        from ..models import Redemption
+        return Redemption(
+            id=row['id'],
+            reward_id=row['reward_id'],
+            coins_spent=row['coins_spent'],
+            redeemed_at=datetime.fromisoformat(row['redeemed_at']),
+            note=row['note'] or ""
         )
 
     def close(self):

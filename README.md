@@ -40,13 +40,13 @@ Back to [Action Loop]
 - **Journal system**: Freeform writing with optional skill/mission links
 - **Reflection tokens**: Rate-limited prompts (10% chance, max 2/day, 7/cycle)
 - **Navigator analysis**: AI-like pattern detection and insights
-- **Time capsules**: Letters to your future self (v1.1)
+- **Time capsules**: Letters to your future self (unlock by date/milestones)
 
 ### Privacy First
 - **100% offline**: All data stored locally in SQLite
 - **No accounts**: Single-user game
 - **No tracking**: Your data stays on your machine
-- **Portable**: Easy export/import (planned)
+- **Portable**: Easy export/import with compression
 
 ## 📦 Installation
 
@@ -73,6 +73,8 @@ ngp
 ```
 
 ## 🎯 Getting Started
+
+> **📖 New to New Game Plus?** Check out the comprehensive [Beginner's Guide](BEGINNER_GUIDE.md) for detailed explanations of every feature and best practices!
 
 ### First Launch
 
@@ -201,13 +203,20 @@ python -m ngp.main --db test.db
 - [x] Journal system
 - [x] Navigator insights
 
-### v1.1 (Planned)
-- [ ] Time Capsules (unlock by date/milestone)
-- [ ] Variety & Consistency scores
-- [ ] Export/Import system
+### v1.1 ✅
+- [x] Time Capsules (unlock by date/milestone)
+- [x] Variety & Consistency scores
+- [x] Export/Import system
+- [x] Enhanced Navigator analysis (7 pattern types)
+- [x] Rewards shop system
+- [x] Comprehensive Beginner's Guide
+
+### v1.2 (Planned)
 - [ ] Mission scheduling & reminders
-- [ ] Enhanced Navigator analysis
-- [ ] Rewards shop system
+- [ ] Historical cycle performance tracking
+- [ ] Advanced statistics dashboard
+- [ ] Capsule encryption enhancements
+- [ ] Mission templates
 
 ### v2.0 (Future)
 - [ ] Plugin system
