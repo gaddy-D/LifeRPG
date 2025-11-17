@@ -48,6 +48,15 @@ Back to [Action Loop]
 - **No tracking**: Your data stays on your machine
 - **Portable**: Easy export/import with compression
 
+### v2.0 Power Features
+- **Goal tracking**: Set and track long-term objectives (6 goal types)
+- **Habit streaks**: Track consecutive day completions
+- **Mission templates**: 5 built-in packs + create custom templates
+- **Advanced statistics**: Comprehensive dashboard with trends
+- **Data visualization**: Export beautiful HTML dashboards with Chart.js
+- **Plugin system**: Extend functionality with custom plugins
+- **Custom themes**: 7 built-in themes (Cyberpunk, Forest, Ocean, Dracula, etc.)
+
 ## 📦 Installation
 
 ### Requirements
@@ -211,19 +220,22 @@ python -m ngp.main --db test.db
 - [x] Rewards shop system
 - [x] Comprehensive Beginner's Guide
 
-### v1.2 (Planned)
-- [ ] Mission scheduling & reminders
-- [ ] Historical cycle performance tracking
-- [ ] Advanced statistics dashboard
-- [ ] Capsule encryption enhancements
-- [ ] Mission templates
+### v2.0 ✅
+- [x] Goal tracking system (6 goal types)
+- [x] Habit streaks tracking
+- [x] Mission templates (5 built-in + custom)
+- [x] Historical cycle performance tracking
+- [x] Advanced statistics dashboard
+- [x] Data visualization (HTML export with charts)
+- [x] Plugin system foundation
+- [x] Custom themes (7 built-in themes)
 
-### v2.0 (Future)
-- [ ] Plugin system
-- [ ] Custom themes
-- [ ] Advanced statistics
-- [ ] Goal tracking
-- [ ] Habit streaks (optional)
+### v2.1 (Future)
+- [ ] Mission scheduling & reminders
+- [ ] Real-time notifications
+- [ ] Advanced goal milestones
+- [ ] Capsule encryption enhancements
+- [ ] Community plugin marketplace
 
 ## 📖 Philosophy
 

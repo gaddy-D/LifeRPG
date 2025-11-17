@@ -7,6 +7,11 @@ from .capsule import CapsuleService
 from .metrics import MetricsService
 from .export_import import ExportImportService
 from .rewards import RewardsService
+from .goals import GoalsService
+from .streaks import StreaksService
+from .templates import TemplatesService
+from .statistics import StatisticsService
+from .visualization import VisualizationService
 
 __all__ = [
     'StorageService',
@@ -15,5 +20,10 @@ __all__ = [
     'CapsuleService',
     'MetricsService',
     'ExportImportService',
-    'RewardsService'
+    'RewardsService',
+    'GoalsService',
+    'StreaksService',
+    'TemplatesService',
+    'StatisticsService',
+    'VisualizationService',
 ]

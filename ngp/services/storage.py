@@ -152,6 +152,63 @@ class StorageService:
             )
         """)
 
+        # Goals table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goals (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                goal_type TEXT NOT NULL,
+                target_value INTEGER NOT NULL,
+                current_value INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                skill_id TEXT,
+                created_at TEXT NOT NULL,
+                completed_at TEXT,
+                deadline TEXT,
+                milestones TEXT
+            )
+        """)
+
+        # Streaks table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS streaks (
+                id TEXT PRIMARY KEY,
+                skill_id TEXT,
+                current_streak INTEGER DEFAULT 0,
+                longest_streak INTEGER DEFAULT 0,
+                last_completion_date TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+        # Mission templates table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS mission_templates (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT NOT NULL,
+                missions TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                times_used INTEGER DEFAULT 0
+            )
+        """)
+
+        # Historical cycle data table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cycle_history (
+                id TEXT PRIMARY KEY,
+                skill_id TEXT NOT NULL,
+                cycle_start TEXT NOT NULL,
+                cycle_end TEXT NOT NULL,
+                target_hit BOOLEAN NOT NULL,
+                completions_count INTEGER DEFAULT 0,
+                xp_earned INTEGER DEFAULT 0,
+                FOREIGN KEY (skill_id) REFERENCES skills(id)
+            )
+        """)
+
         self.conn.commit()
 
     # Player methods
@@ -558,6 +615,197 @@ class StorageService:
             redeemed_at=datetime.fromisoformat(row['redeemed_at']),
             note=row['note'] or ""
         )
+
+    # Goal methods
+    def get_goals(self, status: Optional[str] = None) -> List:
+        """Get goals, optionally filtered by status"""
+        from ..models import Goal, GoalType, GoalStatus
+        cursor = self.conn.cursor()
+
+        if status:
+            rows = cursor.execute("SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC", (status,)).fetchall()
+        else:
+            rows = cursor.execute("SELECT * FROM goals ORDER BY created_at DESC").fetchall()
+
+        return [self._row_to_goal(row) for row in rows]
+
+    def get_goal(self, goal_id: str):
+        """Get specific goal"""
+        from ..models import Goal
+        cursor = self.conn.cursor()
+        row = cursor.execute("SELECT * FROM goals WHERE id = ?", (goal_id,)).fetchone()
+        return self._row_to_goal(row) if row else None
+
+    def save_goal(self, goal):
+        """Save or update goal"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO goals
+            (id, title, description, goal_type, target_value, current_value, status,
+             skill_id, created_at, completed_at, deadline, milestones)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            goal.id,
+            goal.title,
+            goal.description,
+            goal.goal_type.value,
+            goal.target_value,
+            goal.current_value,
+            goal.status.value,
+            goal.skill_id,
+            goal.created_at.isoformat(),
+            goal.completed_at.isoformat() if goal.completed_at else None,
+            goal.deadline.isoformat() if goal.deadline else None,
+            json.dumps(goal.milestones)
+        ))
+        self.conn.commit()
+
+    def _row_to_goal(self, row):
+        """Convert DB row to Goal object"""
+        from ..models import Goal, GoalType, GoalStatus
+        return Goal(
+            id=row['id'],
+            title=row['title'],
+            description=row['description'],
+            goal_type=GoalType(row['goal_type']),
+            target_value=row['target_value'],
+            current_value=row['current_value'],
+            status=GoalStatus(row['status']),
+            skill_id=row['skill_id'],
+            created_at=datetime.fromisoformat(row['created_at']),
+            completed_at=datetime.fromisoformat(row['completed_at']) if row['completed_at'] else None,
+            deadline=datetime.fromisoformat(row['deadline']) if row['deadline'] else None,
+            milestones=json.loads(row['milestones']) if row['milestones'] else []
+        )
+
+    # Streak methods
+    def get_streaks(self) -> List:
+        """Get all streaks"""
+        from ..models import Streak
+        cursor = self.conn.cursor()
+        rows = cursor.execute("SELECT * FROM streaks").fetchall()
+        return [self._row_to_streak(row) for row in rows]
+
+    def get_streak(self, streak_id: str):
+        """Get specific streak"""
+        cursor = self.conn.cursor()
+        row = cursor.execute("SELECT * FROM streaks WHERE id = ?", (streak_id,)).fetchone()
+        return self._row_to_streak(row) if row else None
+
+    def get_streak_by_skill(self, skill_id: Optional[str]) -> Optional:
+        """Get streak for a specific skill (None = overall streak)"""
+        cursor = self.conn.cursor()
+        if skill_id is None:
+            row = cursor.execute("SELECT * FROM streaks WHERE skill_id IS NULL LIMIT 1").fetchone()
+        else:
+            row = cursor.execute("SELECT * FROM streaks WHERE skill_id = ? LIMIT 1", (skill_id,)).fetchone()
+        return self._row_to_streak(row) if row else None
+
+    def save_streak(self, streak):
+        """Save or update streak"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO streaks
+            (id, skill_id, current_streak, longest_streak, last_completion_date, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            streak.id,
+            streak.skill_id,
+            streak.current_streak,
+            streak.longest_streak,
+            streak.last_completion_date.isoformat() if streak.last_completion_date else None,
+            streak.created_at.isoformat()
+        ))
+        self.conn.commit()
+
+    def _row_to_streak(self, row):
+        """Convert DB row to Streak object"""
+        from ..models import Streak
+        from datetime import date
+        return Streak(
+            id=row['id'],
+            skill_id=row['skill_id'],
+            current_streak=row['current_streak'],
+            longest_streak=row['longest_streak'],
+            last_completion_date=date.fromisoformat(row['last_completion_date']) if row['last_completion_date'] else None,
+            created_at=datetime.fromisoformat(row['created_at'])
+        )
+
+    # Template methods
+    def get_templates(self) -> List:
+        """Get all custom templates"""
+        from ..models import MissionTemplate, TemplateCategory
+        cursor = self.conn.cursor()
+        rows = cursor.execute("SELECT * FROM mission_templates ORDER BY name").fetchall()
+        return [self._row_to_template(row) for row in rows]
+
+    def get_template(self, template_id: str):
+        """Get specific template"""
+        cursor = self.conn.cursor()
+        row = cursor.execute("SELECT * FROM mission_templates WHERE id = ?", (template_id,)).fetchone()
+        return self._row_to_template(row) if row else None
+
+    def save_template(self, template):
+        """Save or update template"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO mission_templates
+            (id, name, description, category, missions, created_at, times_used)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            template.id,
+            template.name,
+            template.description,
+            template.category.value,
+            json.dumps(template.missions),
+            template.created_at.isoformat(),
+            template.times_used
+        ))
+        self.conn.commit()
+
+    def _row_to_template(self, row):
+        """Convert DB row to MissionTemplate object"""
+        from ..models import MissionTemplate, TemplateCategory
+        return MissionTemplate(
+            id=row['id'],
+            name=row['name'],
+            description=row['description'],
+            category=TemplateCategory(row['category']),
+            missions=json.loads(row['missions']),
+            created_at=datetime.fromisoformat(row['created_at']),
+            times_used=row['times_used']
+        )
+
+    # Cycle history methods
+    def save_cycle_history(self, history_entry: Dict):
+        """Save a cycle history entry"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO cycle_history
+            (id, skill_id, cycle_start, cycle_end, target_hit, completions_count, xp_earned)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            history_entry['id'],
+            history_entry['skill_id'],
+            history_entry['cycle_start'],
+            history_entry['cycle_end'],
+            history_entry['target_hit'],
+            history_entry.get('completions_count', 0),
+            history_entry.get('xp_earned', 0)
+        ))
+        self.conn.commit()
+
+    def get_cycle_history(self, skill_id: str, limit: int = 10) -> List[Dict]:
+        """Get cycle history for a skill"""
+        cursor = self.conn.cursor()
+        rows = cursor.execute("""
+            SELECT * FROM cycle_history
+            WHERE skill_id = ?
+            ORDER BY cycle_end DESC
+            LIMIT ?
+        """, (skill_id, limit)).fetchall()
+
+        return [dict(row) for row in rows]
 
     def close(self):
         """Close database connection"""

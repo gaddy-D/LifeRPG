@@ -8,6 +8,9 @@ from .journal import JournalEntry
 from .capsule import TimeCapsule
 from .reward import Reward
 from .redemption import Redemption
+from .goal import Goal, GoalType, GoalStatus
+from .streak import Streak
+from .template import MissionTemplate, TemplateCategory, BUILTIN_TEMPLATES
 
 __all__ = [
     'Player',
@@ -18,4 +21,11 @@ __all__ = [
     'TimeCapsule',
     'Reward',
     'Redemption',
+    'Goal',
+    'GoalType',
+    'GoalStatus',
+    'Streak',
+    'MissionTemplate',
+    'TemplateCategory',
+    'BUILTIN_TEMPLATES',
 ]
